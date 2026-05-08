@@ -14,7 +14,7 @@ const TIKTOK_CLIENT_SECRET = process.env.TIKTOK_CLIENT_SECRET;
 const pendingStates = new Map();
 
 app.get('/', (req, res) => {
-  res.send('TikTok OAuth server is running.');
+  res.send('OAuth server is running.');
 });
 
 app.get('/tiktok/connect', (req, res) => {
@@ -40,15 +40,153 @@ app.get('/tiktok/callback', async (req, res) => {
     const { code, state, error, error_description, scopes } = req.query;
 
     if (error) {
-      return res.status(400).send(`TikTok error: ${error}${error_description ? ` - ${error_description}` : ''}`);
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Connection Failed</title>
+          <style>
+            body {
+              margin: 0;
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: Arial, sans-serif;
+              background: #0a0a0f;
+              color: #ffffff;
+            }
+
+            .box {
+              width: min(520px, calc(100% - 32px));
+              padding: 28px;
+              border-radius: 18px;
+              background: #12121a;
+              border: 1px solid #232335;
+              text-align: center;
+            }
+
+            h1 {
+              margin: 0 0 12px;
+              color: #fe2c55;
+            }
+
+            p {
+              color: #d8d8e8;
+              line-height: 1.7;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <h1>Connection failed</h1>
+            <p>${error}${error_description ? ` - ${error_description}` : ''}</p>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     if (!code || !state) {
-      return res.status(400).send('Missing code or state.');
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Missing Authorization Data</title>
+          <style>
+            body {
+              margin: 0;
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: Arial, sans-serif;
+              background: #0a0a0f;
+              color: #ffffff;
+            }
+
+            .box {
+              width: min(520px, calc(100% - 32px));
+              padding: 28px;
+              border-radius: 18px;
+              background: #12121a;
+              border: 1px solid #232335;
+              text-align: center;
+            }
+
+            h1 {
+              margin: 0 0 12px;
+              color: #fe2c55;
+            }
+
+            p {
+              color: #d8d8e8;
+              line-height: 1.7;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <h1>Missing authorization data</h1>
+            <p>The authorization response is missing a code or state value. Please try connecting again.</p>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     if (!pendingStates.has(state)) {
-      return res.status(400).send('Invalid or expired state.');
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Invalid State</title>
+          <style>
+            body {
+              margin: 0;
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: Arial, sans-serif;
+              background: #0a0a0f;
+              color: #ffffff;
+            }
+
+            .box {
+              width: min(520px, calc(100% - 32px));
+              padding: 28px;
+              border-radius: 18px;
+              background: #12121a;
+              border: 1px solid #232335;
+              text-align: center;
+            }
+
+            h1 {
+              margin: 0 0 12px;
+              color: #fe2c55;
+            }
+
+            p {
+              color: #d8d8e8;
+              line-height: 1.7;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <h1>Invalid or expired session</h1>
+            <p>The connection session is invalid or expired. Please return to the website and click Connect account again.</p>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     pendingStates.delete(state);
@@ -73,19 +211,206 @@ app.get('/tiktok/callback', async (req, res) => {
     const data = await tokenRes.json();
 
     if (!tokenRes.ok) {
-      console.error(data);
-      return res.status(400).json(data);
+      console.error('OAuth token exchange failed:', data);
+
+      return res.status(400).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Token Exchange Failed</title>
+          <style>
+            body {
+              margin: 0;
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: Arial, sans-serif;
+              background: #0a0a0f;
+              color: #ffffff;
+            }
+
+            .box {
+              width: min(520px, calc(100% - 32px));
+              padding: 28px;
+              border-radius: 18px;
+              background: #12121a;
+              border: 1px solid #232335;
+              text-align: center;
+            }
+
+            h1 {
+              margin: 0 0 12px;
+              color: #fe2c55;
+            }
+
+            p {
+              color: #d8d8e8;
+              line-height: 1.7;
+            }
+
+            code {
+              display: block;
+              margin-top: 14px;
+              padding: 12px;
+              border-radius: 10px;
+              background: #171722;
+              color: #ffffff;
+              text-align: left;
+              white-space: pre-wrap;
+              overflow-wrap: anywhere;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="box">
+            <h1>Connection failed</h1>
+            <p>The authorization code could not be exchanged for access credentials.</p>
+            <code>${JSON.stringify(data, null, 2)}</code>
+          </div>
+        </body>
+        </html>
+      `);
     }
 
     console.log('open_id:', data.open_id);
-    console.log('access_token:', data.access_token);
-    console.log('refresh_token:', data.refresh_token);
     console.log('scope:', data.scope || scopes);
+    console.log('TikTok account connected successfully.');
 
-    return res.send('تم ربط TikTok بنجاح. ارجع للديسكورد.');
+    return res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Account Connected</title>
+        <style>
+          body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+          }
+
+          .box {
+            width: min(560px, calc(100% - 32px));
+            padding: 32px;
+            border-radius: 18px;
+            background: #12121a;
+            border: 1px solid #232335;
+            text-align: center;
+          }
+
+          .check {
+            width: 54px;
+            height: 54px;
+            margin: 0 auto 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #23c483;
+            color: #ffffff;
+            font-size: 30px;
+            font-weight: bold;
+          }
+
+          h1 {
+            margin: 0 0 12px;
+            font-size: 28px;
+          }
+
+          p {
+            color: #d8d8e8;
+            line-height: 1.7;
+            margin: 0;
+          }
+
+          .hint {
+            margin-top: 16px;
+            color: #9a9ab3;
+            font-size: 14px;
+          }
+
+          a {
+            color: #fe2c55;
+            text-decoration: none;
+          }
+
+          a:hover {
+            text-decoration: underline;
+          }
+        </style>
+      </head>
+
+      <body>
+        <div class="box">
+          <div class="check">✓</div>
+          <h1>Account connected successfully.</h1>
+          <p>Return to Discord and submit a video request through the bot.</p>
+          <p class="hint">
+            The connected account can now be used by the authorized publishing workflow after moderator review.
+          </p>
+        </div>
+      </body>
+      </html>
+    `);
   } catch (err) {
     console.error(err);
-    return res.status(500).send('Internal server error.');
+
+    return res.status(500).send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Server Error</title>
+        <style>
+          body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+          }
+
+          .box {
+            width: min(520px, calc(100% - 32px));
+            padding: 28px;
+            border-radius: 18px;
+            background: #12121a;
+            border: 1px solid #232335;
+            text-align: center;
+          }
+
+          h1 {
+            margin: 0 0 12px;
+            color: #fe2c55;
+          }
+
+          p {
+            color: #d8d8e8;
+            line-height: 1.7;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="box">
+          <h1>Internal server error</h1>
+          <p>An unexpected error occurred while connecting the account. Please try again later.</p>
+        </div>
+      </body>
+      </html>
+    `);
   }
 });
 
